@@ -1,0 +1,60 @@
+services:
+  glpi-db:
+    image: mysql:8.0
+    container_name: glpi-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - /home/volumes/glpi/mysql:/var/lib/mysql
+    restart: always
+    networks:
+      - nginx-proxy
+
+  glpi-web:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: glpi-web
+    depends_on:
+      - glpi-db
+      - redis
+      - memcached
+    environment:
+      VIRTUAL_HOST: ${VIRTUAL_HOST}
+      LETSENCRYPT_HOST: ${LETSENCRYPT_HOST}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+      GLPI_DB_HOST: glpi-db
+      GLPI_DB_NAME: ${DB_NAME}
+      GLPI_DB_USER: ${DB_USER}
+      GLPI_DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      MEMCACHED_HOST: memcached
+    volumes:
+      - ../glpi/glpi:/var/www/html
+      - ../glpi/files:/var/www/html/files
+    restart: always
+    networks:
+      - nginx-proxy
+    ports:
+      - 8080:80
+
+  redis:
+    image: redis:alpine
+    container_name: glpi-redis
+    restart: always
+    networks:
+      - nginx-proxy
+
+  memcached:
+    image: memcached:alpine
+    container_name: glpi-memcached
+    restart: always
+    networks:
+      - nginx-proxy
+
+networks:
+  nginx-proxy:
+    # external: true
