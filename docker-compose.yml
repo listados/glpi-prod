@@ -38,8 +38,6 @@ services:
     restart: always
     networks:
       - nginx-proxy
-    ports:
-      - 8080:80
 
   redis:
     image: redis:alpine
@@ -57,4 +55,4 @@ services:
 
 networks:
   nginx-proxy:
-    # external: true
+    external: true
